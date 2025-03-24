@@ -20,12 +20,22 @@ def generate_c_input(json_data, c_input_file):
 
 def parse_c_output(c_output_file):
     step_statuses = []
+    current_step = None
+
     with open(c_output_file, 'r') as f:
         for line in f:
-            if line.startswith("stepStatus:"):
-                step_status = json.loads(line[len("stepStatus: "):])
-                step_statuses.append(step_status)
-    return step_statuses
+            line = line.strip()
+            if line == "leftVehicles":
+                if current_step is not None:
+                    step_statuses.append(current_step)
+                current_step = {"leftVehicles": []}
+            elif line and current_step is not None:
+                current_step["leftVehicles"].append(line)
+
+    if current_step is not None:
+        step_statuses.append(current_step)
+
+    return {"stepStatuses": step_statuses}
 
 def main(input_file, output_file):
     json_data = parse_json_input(input_file)
@@ -34,12 +44,12 @@ def main(input_file, output_file):
     generate_c_input(json_data, c_input_file)
 
     c_output_file = 'c_output.txt'
-    #subprocess.run(["./main", c_input_file, c_output_file], check=True)
+    subprocess.run(["./main", c_input_file, c_output_file], check=True)
 
-    #step_statuses = parse_c_output(c_output_file)
+    step_statuses = parse_c_output(c_output_file)
 
-    #with open(output_file, 'w') as f:
-        #json.dump({"stepStatuses": step_statuses}, f, indent=2)
+    with open(output_file, 'w') as f:
+        json.dump({"stepStatuses": step_statuses}, f, indent=2)
 
 if __name__ == "__main__":
     import sys

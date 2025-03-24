@@ -57,41 +57,54 @@ void addVehicle(Intersection *intersection, const char *vehicleId, RoadDirection
 }
 
 void step(Intersection *intersection, FILE *output) {
-    fprintf(output, "Step %d:\n", intersection->stepCount);
+    fprintf(output, "leftVehicles\n");
 
     for (int i = 0; i < 4; i++) {
-        Road *road = &intersection->roads[i];
-
-        if (road->lightState == GREEN && road->vehicleCount > 0) {
-            Vehicle exitingVehicle = road->vehicles[0];
-            fprintf(output, "%s\n", exitingVehicle.vehicleId);
-            for(int j=1;j<road->vehicleCount;j++){
-                road->vehicles[j-1] = road->vehicles[j];
+        if (intersection->roads[i].lightState == GREEN) {
+            Road *road = &intersection->roads[i];
+            while (road->vehicleCount > 0) { 
+                Vehicle vehicle = road->vehicles[0];
+                fprintf(output, "%s\n", vehicle.vehicleId);
+                
+                for (int j = 1; j < road->vehicleCount; j++) {
+                    road->vehicles[j-1] = road->vehicles[j];
+                }
+                road->vehicleCount--;
             }
-            road->vehicleCount -= 1;
         }
     }
+    int cyclePhase = intersection->stepCount % 3;
 
-    // Change lights every 10 steps
-    int nextLight = (intersection->stepCount / 2) % 4;
     for (int i = 0; i < 4; i++) {
-        intersection->roads[i].lightState = (i == nextLight) ? GREEN : RED;
+        if ((intersection->stepCount / 3) % 2 == 0) { 
+            if (i == NORTH || i == SOUTH) {
+                intersection->roads[i].lightState = (cyclePhase < 2) ? GREEN : YELLOW;
+            } else {
+                intersection->roads[i].lightState = RED;
+            }
+        } else {  
+            if (i == EAST || i == WEST) {
+                intersection->roads[i].lightState = (cyclePhase < 2) ? GREEN : YELLOW;
+            } else {
+                intersection->roads[i].lightState = RED;
+            }
+        }
     }
 
     intersection->stepCount++;
 }
+
+
 int main(int argc, char *argv[]){
-    /*if (argc != 3) {
+    if (argc != 3) {
         fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
         return 1;
-    }*/
+    }
 
-    //const char *inputFile = argv[1];
-    //const char *outputFile = argv[2];
-    const char *inputFile = "c_input.txt";
-    const char *outputFile = "c_output.txt";
+    const char *inputFile = argv[1];
+    const char *outputFile = argv[2];
 
-    char command[20];
+    char command[30];
     char vehicleId[20];
     RoadDirection startRoad;
     RoadDirection endRoad;
@@ -122,6 +135,6 @@ int main(int argc, char *argv[]){
         }
     }
 
-    free(input);
-    free(output);
+    fclose(input);
+    fclose(output);
 }

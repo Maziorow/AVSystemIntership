@@ -1,0 +1,5 @@
+addVehicle vehicle1 0 2
+addVehicle vehicle2 1 3
+step
+step
+step
